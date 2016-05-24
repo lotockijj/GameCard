@@ -1,6 +1,5 @@
 package com.dominyuk.lotoroman;
 
-import java.util.Collections;
 import java.util.LinkedList;
 
 public class Deck {  

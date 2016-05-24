@@ -20,6 +20,9 @@ public class Card implements Comparable<Card>{
 	}
 	@Override
 	public int compareTo(Card c) {
+		//return IndexOf(Deck.rank, this.rank) - IndexOf(Deck.rank, c.getRank());   
+		//return Array.getInt(Deck.rank, this.getRank()) - Array.getInt(Deck.rank, c.getRank()); 
+		//return Arrays.sort(this.getRank()) - Arrays.sort(c.getRank());;
 		return Arrays.binarySearch(Deck.rank, this.getRank()) - Arrays.binarySearch(Deck.rank, c.getRank());
 		//return (new String().indexOf(this.getRank()) - (new String().indexOf(c.getRank())));
 	}
