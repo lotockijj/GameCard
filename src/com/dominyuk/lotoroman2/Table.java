@@ -1,12 +1,15 @@
 package com.dominyuk.lotoroman2;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Collections;
 import java.util.LinkedList;
 
 public class Table {
-	String[] playersNames = {"Once", "Two", "Three", "Four", "Five", "Six", "Seven"};
-	int numberPlayers = playersNames.length;
+	
+	int numberPlayers;
+	String[] playersNames;
 	boolean isShortDeck = true;
 	LinkedList<Player> playersInGame = new LinkedList<Player>(); // I change ArrayList to LinkedList because ArrayList don't sort players in order to step. 
 	int startPlayer; 
@@ -14,6 +17,20 @@ public class Table {
 	LinkedList<Card> cardsOnTable = new LinkedList<Card>(); 
 	Deck cardDeck = new Deck(isShortDeck); 
 	int currentPlayer = 0; 
+	
+	public void setPlayersNumber() throws IOException{
+		System.out.println("Set number players.");
+		numberPlayers = getPlayerChoose();
+	}
+	
+	public void setPlayersName() throws IOException{
+		playersNames = new String[numberPlayers];
+		for(int i = 0; i < numberPlayers; i++){
+			System.out.println("Input name " + (i + 1) + " player: ");
+			playersNames[i] = getPlayerNameChoose();
+		}
+		System.out.println("==================================================");
+	}
 			
 	public void createPlayersAndDevideDeck(String... args){
 		LinkedList<Card> tableCardDeck = cardDeck.shuffledSet;
@@ -22,6 +39,7 @@ public class Table {
 			playersInGame.add(player);
 			System.out.println(player.name);
 		}
+		System.out.println("==================================================");
 		while(true){
 			Card s = tableCardDeck.poll();
 			playersInGame.get(currentPlayer).cardsOnHands.add(s);
@@ -56,6 +74,7 @@ public class Table {
 		for(int j = 0; j < playersInGame.size(); j++){
 			System.out.println(playersInGame.get(j).name);
 		}
+		System.out.println("==================================================");
 		takeCardFromPlayer(currentPlayer, startCard); 
 		for(int j = 0; j < playersInGame.get(currentPlayer).cardsOnHands.size(); j++){
 			if(playersInGame.get(currentPlayer).cardsOnHands.get(j).getRank() == "9"){ //it concerns only first step.
@@ -63,7 +82,6 @@ public class Table {
 			}
 		}
 		currentPlayer = nextPlayer(currentPlayer); 
-		ScannerPlayerChoose scann = new ScannerPlayerChoose(); 
 		while(true){
 			int myChoose = -1; 
 			int countCardsPlayerMoreThenLastOnTable = 0; 
@@ -79,7 +97,7 @@ public class Table {
 				while(true){
 					System.out.println("If you want to put, choose 0. "
 							+ "If you want to take card, choose 1. ");
-					myChoose = scann.getPlayerChoose(); 
+					myChoose = getPlayerChoose(); 
 					if(myChoose != 0 && myChoose != 1){
 						continue; 
 					} else {
@@ -95,7 +113,7 @@ public class Table {
 				System.out.println("You must take 3 or more card, but not less or eqaul then "
 						+ (cardsOnTable.size() - 1) + " card." + "\nInput number card you want to take:");
 				while(true){
-					int myChooseToTakeCard = scann.getPlayerChoose();
+					int myChooseToTakeCard = getPlayerChoose();
 					if(cardsOnTable.size() < 3 && 
 							myChooseToTakeCard == 1 || myChooseToTakeCard ==2){
 						takeCardDependOnChoose(myChooseToTakeCard); 
@@ -120,7 +138,7 @@ public class Table {
 						putAllCardWithRankNinthOnNinthHeart(); 
 						break;
 					}
-					int playerInput = scann.getPlayerChoose();//java.util.InputMismatchException
+					int playerInput = getPlayerChoose();//java.util.InputMismatchException
 					if(checkCard(currentPlayer, playerInput).compareTo(cardsOnTable.getLast()) >= 0){
 						takeCardFromPlayer(currentPlayer, playerInput);
 						putBundleCardsWithTheSameRankOnTable(); // we want to four cards with the same rank...
@@ -210,10 +228,9 @@ public class Table {
 			if(count == 3){
 				System.out.printf("If you want to put all cards(bundle) with rank %s, "
 						+ "choose 0, else choose 1.  ", cardsOnTable.getLast().getRank());
-				ScannerPlayerChoose scann = new ScannerPlayerChoose(); 
-				int playerInput = scann.getPlayerChoose();
+				int playerInput = getPlayerChoose();
 				if (playerInput == 0){
-					for(int j1 = 0; j1 < playersInGame.get(currentPlayer).cardsOnHands.size() - 1; j1++){
+					for(int j1 = 0; j1 < playersInGame.get(currentPlayer).cardsOnHands.size(); j1++){
 						if(cardsOnTable.getLast().getRank() == 
 								playersInGame.get(currentPlayer).cardsOnHands.get(j1).getRank()){
 							takeCardFromPlayer(currentPlayer, j1);
@@ -229,9 +246,8 @@ public class Table {
 	}
 
 	private void putAllCardWithRankNinthOnNinthHeart() throws IOException{//put all cards with rank 9 on table... 
-		ScannerPlayerChoose sc = new ScannerPlayerChoose(); 
 		System.out.println("If you want to put all cards with rank 9, put 0, else 1.");
-		int myChooseHowMuchCardsNinthPut = sc.getPlayerChoose();
+		int myChooseHowMuchCardsNinthPut = getPlayerChoose();
 		for(int j = 0; j < playersInGame.get(currentPlayer).cardsOnHands.size(); j++){
 			if(myChooseHowMuchCardsNinthPut == 0){
 				for(int j1 = 0; j1 < playersInGame.get(currentPlayer).cardsOnHands.size(); j1++){
@@ -252,6 +268,19 @@ public class Table {
 			}
 		}
 		return countNumberRankNinth;
+	}
+	
+	public int getPlayerChoose() throws IOException{
+		BufferedReader readerNumber = new BufferedReader(new InputStreamReader (System.in)); 
+		String s1 = readerNumber.readLine();
+		Integer i = Integer.valueOf(s1);
+		return i;
+	}
+
+	public String getPlayerNameChoose() throws IOException {
+		BufferedReader readerName = new BufferedReader(new InputStreamReader (System.in)); 
+		String t =  readerName.readLine();
+		return t;
 	}
 }
 
