@@ -3,82 +3,123 @@ package com.dominyuk.lotoroman2;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 
-public class Table {
+public class Table implements ModelTable{
 	
 	int numberPlayers;
 	String[] playersNames;
 	boolean isShortDeck = true;
-	LinkedList<Player> playersInGame = new LinkedList<Player>(); // I change ArrayList to LinkedList because ArrayList don't sort players in order to step. 
+	LinkedList<Player> playersInGame = new LinkedList<Player>(); 
 	int startPlayer; 
 	int startCard;
 	LinkedList<Card> cardsOnTable = new LinkedList<Card>(); 
-	Deck cardDeck = new Deck(isShortDeck); 
+	Deck cardDeck; 
 	int currentPlayer = 0; 
+	Card startCardDependShortOrFullDeck = new Card(Deck.suit[2], Deck.rank[7]);
+	StringBuilder result;
 	
-	public void setPlayersNumber() throws IOException{
-		System.out.println("Set number players.");
-		numberPlayers = getPlayerChoose();
+	ArrayList<Observer> observers;
+	
+	
+	public Table(){
+		observers  = new ArrayList<Observer>();
 	}
 	
-	public void setPlayersName() throws IOException{
-		playersNames = new String[numberPlayers];
-		for(int i = 0; i < numberPlayers; i++){
-			System.out.println("Input name " + (i + 1) + " player: ");
-			playersNames[i] = getPlayerNameChoose();
+	@Override
+	public void registerObserver(Observer o) {
+		observers.add(o);
+	}
+	@Override
+	public void removeObserver(Observer o) {
+		int i = observers.indexOf(o);
+		if(i >= 0){
+			observers.remove(i);
 		}
-		System.out.println("==================================================");
+		
 	}
-			
-	public void createPlayersAndDevideDeck(String... args){
+	@Override
+	public void notifyObserver(){
+		for(int i = 0; i < observers.size(); i++){
+			Observer observer = (Observer) observers.get(i);
+			observer.update(i, playersNames, isShortDeck);
+		}
+	}
+	
+	public void setStartData(int numberPlayers, String[] playersNames, boolean isShortDeck){
+		this.numberPlayers = numberPlayers;
+		this.playersNames = playersNames;
+		this.isShortDeck = isShortDeck;
+		displaySetData();
+	}
+	
+	public void displaySetData(){
+		System.out.println("Number players " + numberPlayers + ".");
+		for(int i = 0; i < playersNames.length; i++){
+			System.out.print(playersNames[i] + ", ");
+		}
+		if(isShortDeck){
+			System.out.println("\nShort deck ");
+		} else if(!isShortDeck) {
+			System.out.println("\nFull deck ");
+		}
+	}
+	
+	public void createPlayersAndDevideDeck(String... args) throws IOException{
 		LinkedList<Card> tableCardDeck = cardDeck.shuffledSet;
 		for(int i = 0; i < numberPlayers; i++){
 			Player player = new Player(playersNames[i]);
 			playersInGame.add(player);
 			System.out.println(player.name);
 		}
-		System.out.println("==================================================");
 		while(true){
 			Card s = tableCardDeck.poll();
 			playersInGame.get(currentPlayer).cardsOnHands.add(s);
-			Collections.sort(playersInGame.get(currentPlayer).cardsOnHands); 
 			currentPlayer = nextPlayer(currentPlayer); 
 			if(tableCardDeck.size() == 0) break; 
 		}
 		System.out.println(); 
 		for(int i = 0; i < playersInGame.size(); i++){
+			Collections.sort(playersInGame.get(i).cardsOnHands, Card.rankAndSuitComparator);
 			System.out.println("Name player - " + playersInGame.get(i).name + ": ");
 			for(int j = 0; j < playersInGame.get(i).cardsOnHands.size(); j++){
 				System.out.print(playersInGame.get(i).cardsOnHands.get(j) + " ");
 			} 
 			System.out.println(); System.out.println();
 		}
-	}
-
-
-	public void search9Hearts(){ // in class Deck I commented method shuffle in order to simplify further develop. 
-		for(int i = 0; i < playersInGame.size(); i++){ // in this method I try to find place "Hearts 9". 
+		searchStartCardWithRankHearts();
+	} 
+	
+	public void searchStartCardWithRankHearts() throws IOException{ // in class Deck I commented method shuffle in order to simplify further develop. 
+		if(!isShortDeck){
+			startCardDependShortOrFullDeck = new Card(Deck.suit[2], Deck.rank[0]);
+		}
+		for(int i = 0; i < playersInGame.size(); i++){ // in this method I try to find place start card(9 or 2 Hearts). 
 			for(int j = 0; j < playersInGame.get(i).cardsOnHands.size(); j++){
-				if(playersInGame.get(i).cardsOnHands.get(j).getSuit() == "Hearts" 
-						&& playersInGame.get(i).cardsOnHands.get(j).getRank() == "9"){
+				if(playersInGame.get(i).cardsOnHands.get(j).getRank() 
+						== startCardDependShortOrFullDeck.getRank() 
+						&& playersInGame.get(i).cardsOnHands.get(j).getSuit() 
+						== startCardDependShortOrFullDeck.getSuit()){
 					currentPlayer = i; 
-					startCard = j; 
+					startCard = j;
 				}
 			}
 		}
+		//playGame();
 	}
 
 	public void playGame() throws IOException{
 		for(int j = 0; j < playersInGame.size(); j++){
 			System.out.println(playersInGame.get(j).name);
 		}
-		System.out.println("==================================================");
 		takeCardFromPlayer(currentPlayer, startCard); 
 		for(int j = 0; j < playersInGame.get(currentPlayer).cardsOnHands.size(); j++){
-			if(playersInGame.get(currentPlayer).cardsOnHands.get(j).getRank() == "9"){ //it concerns only first step.
+			if(playersInGame.get(currentPlayer).cardsOnHands.get(j).getRank() 
+					== startCardDependShortOrFullDeck.getRank()){ //it concerns only first step.
 				takeCardFromPlayer(currentPlayer, j);
+				j--; // !!! 
 			}
 		}
 		currentPlayer = nextPlayer(currentPlayer); 
@@ -129,13 +170,13 @@ public class Table {
 				showCardsCurrentPlayer(currentPlayer);
 				System.out.println("Input position of your card: ");
 				while(true){
-					int checkCardWithRankNinth = checkForNumberCardWithRankNinth(); 
+					int checkCardWithRankNinth = checkForNumberCardWithStartCardRank(); 
 					// This method concerns only when we have one card on table with rank ninth,
 					// and currentPlayer have 2 or 3 card with rank 9. 
 					if(cardsOnTable.size() == 1 && checkCardWithRankNinth > 1){
 						System.out.println("getLast()" + cardsOnTable.getLast());
 						System.out.println("getFirst()" + cardsOnTable.getFirst());
-						putAllCardWithRankNinthOnNinthHeart(); 
+						putAllCardWithStartRankOnStartCard(); 
 						break;
 					}
 					int playerInput = getPlayerChoose();//java.util.InputMismatchException
@@ -149,7 +190,7 @@ public class Table {
 						continue; 
 					}
 				}
-				for(int j = 0; j < playersInGame.size(); j++){ // if player already havn't card, we remove him from game. 
+				for(int j = 0; j < playersInGame.size(); j++){ // if player already haven't card, we remove him from game. 
 					if(playersInGame.get(j).cardsOnHands.isEmpty()){
 						playersInGame.remove(j);
 						currentPlayer--;
@@ -185,15 +226,18 @@ public class Table {
 
 	void  showCardsOnTable(LinkedList<Card> OnTable){
 		System.out.println("Cards on Table: ");
-		for(Card e: OnTable){  
+		for(Card e: OnTable){
+			result = new StringBuilder();
 			System.out.print(e + ", ");
+			result.append(e + ", ");
 		}
 		System.out.println();
 	}
 
 	void showCardsCurrentPlayer(int currentPlayer){
 		System.out.println(playersInGame.get(currentPlayer).name);
-		Collections.sort(playersInGame.get(currentPlayer).cardsOnHands); 
+		Collections.sort(playersInGame.get(currentPlayer).cardsOnHands,
+				Card.rankAndSuitComparator);
 		for(int j = 0; j < playersInGame.get(currentPlayer).cardsOnHands.size(); j++){
 			System.out.println("¹=" + j + " " + checkCard(currentPlayer, j));
 		}
@@ -207,10 +251,7 @@ public class Table {
 		System.out.println("AFTER loop takeCardFromTable!");
 		showCardsCurrentPlayer(currentPlayer);
 		showCardsOnTable(cardsOnTable); //All cards in play deck after player put cards. 
-		System.out.println("Before currentPlayer = " + currentPlayer);
 		currentPlayer = nextPlayer(currentPlayer);
-		System.out.println("After currentPlayer = " + currentPlayer);
-		System.out.println();
 		showCardsCurrentPlayer(currentPlayer);
 		showCardsOnTable(cardsOnTable);
 	}
@@ -245,13 +286,15 @@ public class Table {
 		}
 	}
 
-	private void putAllCardWithRankNinthOnNinthHeart() throws IOException{//put all cards with rank 9 on table... 
-		System.out.println("If you want to put all cards with rank 9, put 0, else 1.");
+	private void putAllCardWithStartRankOnStartCard() throws IOException{//put all cards with rank 9 on table... 
+		System.out.println("If you want to put all cards with rank " 
+	                        + startCardDependShortOrFullDeck.getRank() + " put 0, else 1.");
 		int myChooseHowMuchCardsNinthPut = getPlayerChoose();
 		for(int j = 0; j < playersInGame.get(currentPlayer).cardsOnHands.size(); j++){
 			if(myChooseHowMuchCardsNinthPut == 0){
 				for(int j1 = 0; j1 < playersInGame.get(currentPlayer).cardsOnHands.size(); j1++){
-					if(playersInGame.get(currentPlayer).cardsOnHands.get(j1).getRank() == "9"){
+					if(playersInGame.get(currentPlayer).cardsOnHands.get(j1).getRank() 
+						== startCardDependShortOrFullDeck.getRank()){
 						cardsOnTable.add(playersInGame.get(currentPlayer).cardsOnHands.get(j1)); 
 						playersInGame.get(currentPlayer).cardsOnHands.remove(j1);
 					}
@@ -260,14 +303,15 @@ public class Table {
 		}
 	}
 
-	private int checkForNumberCardWithRankNinth(){ 
-		int countNumberRankNinth = 0; 
+	private int checkForNumberCardWithStartCardRank(){ 
+		int countNumberCardRank = 0; 
 		for(int j = 0; j < playersInGame.get(currentPlayer).cardsOnHands.size(); j++){
-			if(playersInGame.get(currentPlayer).cardsOnHands.get(j).getRank() == "9"){
-				countNumberRankNinth++; 
+			if(playersInGame.get(currentPlayer).cardsOnHands.get(j).getRank() 
+					== startCardDependShortOrFullDeck.getRank()){
+				countNumberCardRank++; 
 			}
 		}
-		return countNumberRankNinth;
+		return countNumberCardRank;
 	}
 	
 	public int getPlayerChoose() throws IOException{
@@ -282,6 +326,7 @@ public class Table {
 		String t =  readerName.readLine();
 		return t;
 	}
+
 }
 
 

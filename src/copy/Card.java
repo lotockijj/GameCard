@@ -1,4 +1,4 @@
-package com.dominyuk.lotoroman2;
+package copy;
 
 import java.util.Arrays;
 import java.util.Comparator;

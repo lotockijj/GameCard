@@ -3,7 +3,8 @@ package com.dominyuk.lotoroman2;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Player implements Comparable{
+public class Player implements Comparable<Object>{
+	
 	public final String name; 
 	List<Card> cardsOnHands = new ArrayList<>();
 	
