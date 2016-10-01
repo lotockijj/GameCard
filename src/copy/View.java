@@ -11,6 +11,8 @@ import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
+import javafx.scene.text.Font;
+
 public class View {
     
     private JFrame frame;
