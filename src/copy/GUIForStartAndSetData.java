@@ -148,4 +148,5 @@ public class GUIForStartAndSetData  implements ActionListener, Observer{
 	public boolean getIssOrFDeck() {
 		return sOrFDeck;
 	}
+	
 }

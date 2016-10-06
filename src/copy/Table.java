@@ -18,7 +18,7 @@ public class Table{
 	int startCard;
 	LinkedList<Card> cardsOnTable = new LinkedList<Card>(); 
 	Deck cardDeck; 
-	int currentPlayer = 0; 
+	static int currentPlayer = 0; 
 	Card startCardDependShortOrFullDeck = new Card(Deck.suit[2], Deck.rank[7]);
 	StringBuilder result;
 	
@@ -321,6 +321,25 @@ public class Table{
 		return countNumberCardRank;
 	}
 	
+	public void checkIfPlayersHaveCard(){
+		for(int i = 0; i < playersInGame.size(); i++){ // if player already haven't card, we remove him from game. 
+			if(playersInGame.get(i).cardsOnHands.isEmpty()){
+				System.out.println(playersInGame.get(i).name + "just have finished game. HIP-HIP-HURAYYYYY..........");
+				playersInGame.remove(i);
+				currentPlayer--;
+			}
+		}
+	}
+	
+	public boolean checkIfItIsTheLastPlayer(){
+		boolean ifItIsTheLastPlayer = false;
+		if(playersInGame.size() == 1){ // when we have only one player with card, game just have finished, p.get(0) lost(defeated). 
+			System.out.println("Player " + playersInGame.get(0).name + " lost!!!");
+			ifItIsTheLastPlayer = true;
+		}
+		return ifItIsTheLastPlayer;
+	}
+
 	public int getPlayerChoose() throws IOException{
 		BufferedReader readerNumber = new BufferedReader(new InputStreamReader (System.in)); 
 		String s1 = readerNumber.readLine();
