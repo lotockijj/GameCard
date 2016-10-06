@@ -132,6 +132,7 @@ public class Controller {
 			view.setTheEndGame(model.getPlayerInGame().getLast().name);
 		}
 	}
+	
 }
 
 

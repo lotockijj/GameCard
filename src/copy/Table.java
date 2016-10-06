@@ -1,8 +1,5 @@
 package copy;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -56,29 +53,18 @@ public class Table{
 	}
 	
 	public void displaySetData(){
-		System.out.println("Number players " + numberPlayers + ".");
 		for(int i = 0; i < playersNames.length; i++){
 			System.out.print(playersNames[i] + ", ");
 		}
-		if(isShortDeck){
-			System.out.println("\nShort deck ");
-		} else if(!isShortDeck) {
-			System.out.println("\nFull deck ");
-		}
-		try {
 			createPlayersAndDevideDeck(playersNames);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 	
-	public void createPlayersAndDevideDeck(String... args) throws IOException{
+	public void createPlayersAndDevideDeck(String... args){
 		cardDeck = new Deck(isShortDeck);
 		LinkedList<Card> tableCardDeck = cardDeck.shuffledSet;
 		for(int i = 0; i < numberPlayers; i++){
 			Player player = new Player(playersNames[i]);
 			playersInGame.add(player);
-			System.out.println(player.name);
 		}
 		while(true){
 			Card s = tableCardDeck.poll();
@@ -86,19 +72,13 @@ public class Table{
 			currentPlayer = nextPlayer(currentPlayer); 
 			if(tableCardDeck.size() == 0) break; 
 		}
-		System.out.println(); 
 		for(int i = 0; i < playersInGame.size(); i++){
 			Collections.sort(playersInGame.get(i).cardsOnHands, Card.rankAndSuitComparator);
-			System.out.println("Name player - " + playersInGame.get(i).name + ": ");
-			for(int j = 0; j < playersInGame.get(i).cardsOnHands.size(); j++){
-				System.out.print(playersInGame.get(i).cardsOnHands.get(j) + " ");
-			} 
-			System.out.println("\n");
 		}
 		searchStartCardWithRankHearts();
 	} 
 	
-	public void searchStartCardWithRankHearts() throws IOException{ // in class Deck I commented method shuffle in order to simplify further develop. 
+	public void searchStartCardWithRankHearts(){ // in class Deck I commented method shuffle in order to simplify further develop. 
 		if(!isShortDeck){
 			startCardDependShortOrFullDeck = new Card(Deck.suit[2], Deck.rank[0]);
 		}
@@ -117,101 +97,6 @@ public class Table{
 		//playGame();
 	}
 	
-	public void playGame() throws IOException{
-		for(int j = 0; j < playersInGame.size(); j++){
-			System.out.println(playersInGame.get(j).name);
-		}
-		takeCardFromPlayer(currentPlayer, startCard); 
-		for(int j = 0; j < playersInGame.get(currentPlayer).cardsOnHands.size(); j++){
-			if(playersInGame.get(currentPlayer).cardsOnHands.get(j).getRank() 
-					== startCardDependShortOrFullDeck.getRank()){ //it concerns only first step.
-				takeCardFromPlayer(currentPlayer, j);
-				j--; // !!! 
-			}
-		}
-		currentPlayer = nextPlayer(currentPlayer); 
-		while(true){
-			int myChoose = -1; 
-			int countCardsPlayerMoreThenLastOnTable = 0; 
-			// In case when player haven't card greater then last on Table. 
-			for(int j2 = 0; j2 < playersInGame.get(currentPlayer).cardsOnHands.size(); j2++){
-				if(playersInGame.get(currentPlayer).cardsOnHands.get(j2).compareTo(cardsOnTable.getLast()) >= 0){
-					countCardsPlayerMoreThenLastOnTable++; 
-				}
-			}
-			showCardsCurrentPlayer(currentPlayer);
-			showCardsOnTable(cardsOnTable); //test all cards in play deck cardsOnTable.
-			if(countCardsPlayerMoreThenLastOnTable > 0){ //CHANGE
-				while(true){
-					System.out.println("If you want to put, choose 0. "
-							+ "If you want to take card, choose 1. ");
-					myChoose = getPlayerChoose(); 
-					if(myChoose != 0 && myChoose != 1){
-						continue; 
-					} else {
-						break; 
-					}
-				} 
-			}
-			if(countCardsPlayerMoreThenLastOnTable == 0){
-				System.out.println("You can't put cards, you must take card!!!");
-				myChoose = 1; 
-			}
-			if(myChoose == 1){
-				System.out.println("You must take 3 or more card, but not less or eqaul then "
-						+ (cardsOnTable.size() - 1) + " card." + "\nInput number card you want to take:");
-				while(true){
-					int myChooseToTakeCard = getPlayerChoose();
-					if(cardsOnTable.size() < 3 && 
-							myChooseToTakeCard == 1 || myChooseToTakeCard ==2){
-						takeCardDependOnChoose(myChooseToTakeCard); 
-						break;
-					}
-					if(myChooseToTakeCard >= 3 && myChooseToTakeCard < cardsOnTable.size()){
-						takeCardDependOnChoose(myChooseToTakeCard); 
-						break;
-					}   
-				} 
-			}
-			if(myChoose == 0 && countCardsPlayerMoreThenLastOnTable > 0){
-				showCardsCurrentPlayer(currentPlayer);
-				System.out.println("Input position of your card: ");
-				while(true){
-					int checkCardWithRankNinth = checkForNumberCardWithStartCardRank(); 
-					// This method concerns only when we have one card on table with rank ninth,
-					// and currentPlayer have 2 or 3 card with rank 9. 
-					if(cardsOnTable.size() == 1 && checkCardWithRankNinth > 1){
-						System.out.println("getLast()" + cardsOnTable.getLast());
-						System.out.println("getFirst()" + cardsOnTable.getFirst());
-						putAllCardWithStartRankOnStartCard(); 
-						break;
-					}
-					int playerInput = getPlayerChoose();//java.util.InputMismatchException
-					if(checkCard(currentPlayer, playerInput).compareTo(cardsOnTable.getLast()) >= 0){
-						takeCardFromPlayer(currentPlayer, playerInput);
-						putBundleCardsWithTheSameRankOnTable(); // we have four cards with the same rank...
-						showCardsOnTable(cardsOnTable); //All cards in play deck q after player put cards.
-						break; 
-					} else {
-						System.out.println("Wrong number! Try again!!!");
-						continue; 
-					}
-				}
-				for(int j = 0; j < playersInGame.size(); j++){ // if player already haven't card, we remove him from game. 
-					if(playersInGame.get(j).cardsOnHands.isEmpty()){
-						playersInGame.remove(j);
-						currentPlayer--;
-					}
-				}
-				currentPlayer = nextPlayer(currentPlayer);
-				if(playersInGame.size() == 1){ // when we have only one player with card, game just have finished, p.get(0) lost(defeated). 
-					System.out.println("Player " + playersInGame.get(0).name + " lost!!!");
-					break;  // we exit from game. 
-				}
-			}
-		}
-	}
-
 	public void takeCardFromPlayer(int playerNumber, int cardPosition){
 		cardsOnTable.add(playersInGame.get(playerNumber).cardsOnHands.get(cardPosition)); 
 		playersInGame.get(playerNumber).cardsOnHands.remove(cardPosition);
@@ -222,109 +107,14 @@ public class Table{
 				?  0 : ++currentPlayerId;
 	}
 
-	private Card checkCard(int playerNumber, int cardPosition ){
-		return playersInGame.get(playerNumber).cardsOnHands.get(cardPosition);  
-	}
-
 	void takeCardFromTable(int playerNumber){
 		playersInGame.get(playerNumber).cardsOnHands.add(cardsOnTable.getLast()); 
 		cardsOnTable.removeLast(); 
 	}
 
-	void showCardsOnTable(LinkedList<Card> OnTable){
-		System.out.println("Cards on Table: ");
-		for(Card e: OnTable){
-			result = new StringBuilder();
-			System.out.print(e + ", ");
-			result.append(e + ", ");
-		}
-		System.out.println();
-	}
-
-	void showCardsCurrentPlayer(int currentPlayer){
-		System.out.println(playersInGame.get(currentPlayer).name);
-		Collections.sort(playersInGame.get(currentPlayer).cardsOnHands,
-				Card.rankAndSuitComparator);
-		for(int j = 0; j < playersInGame.get(currentPlayer).cardsOnHands.size(); j++){
-			System.out.println("¹=" + j + " " + checkCard(currentPlayer, j));
-		}
-	}
-
-	void takeCardDependOnChoose(int numberTakeCard){
-		System.out.println();
-		for(int j = 0; j < numberTakeCard; j++){
-			takeCardFromTable(currentPlayer); 
-		} 
-		System.out.println("AFTER loop takeCardFromTable!");
-		showCardsCurrentPlayer(currentPlayer);
-		showCardsOnTable(cardsOnTable); //All cards in play deck after player put cards. 
-		currentPlayer = nextPlayer(currentPlayer);
-		showCardsCurrentPlayer(currentPlayer);
-		showCardsOnTable(cardsOnTable);
-	}
-
-	private void putBundleCardsWithTheSameRankOnTable() throws IOException { // we want to four cards with the same rank... 
-		while(true){
-			int count = 0;
-			for(int j = 0; j < playersInGame.get(currentPlayer).cardsOnHands.size(); j++){
-				if(cardsOnTable.getLast().getRank() == 
-						playersInGame.get(currentPlayer).cardsOnHands.get(j).getRank()){
-					count++;
-				}
-			}
-			if(count != 3) break; 
-			if(count == 3){
-				System.out.printf("If you want to put all cards(bundle) with rank %s, "
-						+ "choose 0, else choose 1.  ", cardsOnTable.getLast().getRank());
-				int playerInput = getPlayerChoose();
-				if (playerInput == 0){
-					for(int j1 = 0; j1 < playersInGame.get(currentPlayer).cardsOnHands.size(); j1++){
-						if(cardsOnTable.getLast().getRank() == 
-								playersInGame.get(currentPlayer).cardsOnHands.get(j1).getRank()){
-							takeCardFromPlayer(currentPlayer, j1);
-							j1--; 
-						}
-					}  break;
-				}
-				if (playerInput == 1){
-					break; 
-				}
-			}
-		}
-	}
-
-	private void putAllCardWithStartRankOnStartCard() throws IOException{//put all cards with rank 9 on table... 
-		System.out.println("If you want to put all cards with rank " 
-	                        + startCardDependShortOrFullDeck.getRank() + " put 0, else 1.");
-		int myChooseHowMuchCardsNinthPut = getPlayerChoose();
-		for(int j = 0; j < playersInGame.get(currentPlayer).cardsOnHands.size(); j++){
-			if(myChooseHowMuchCardsNinthPut == 0){
-				for(int j1 = 0; j1 < playersInGame.get(currentPlayer).cardsOnHands.size(); j1++){
-					if(playersInGame.get(currentPlayer).cardsOnHands.get(j1).getRank() 
-						== startCardDependShortOrFullDeck.getRank()){
-						cardsOnTable.add(playersInGame.get(currentPlayer).cardsOnHands.get(j1)); 
-						playersInGame.get(currentPlayer).cardsOnHands.remove(j1);
-					}
-				}
-			}
-		}
-	}
-
-	private int checkForNumberCardWithStartCardRank(){ 
-		int countNumberCardRank = 0; 
-		for(int j = 0; j < playersInGame.get(currentPlayer).cardsOnHands.size(); j++){
-			if(playersInGame.get(currentPlayer).cardsOnHands.get(j).getRank() 
-					== startCardDependShortOrFullDeck.getRank()){
-				countNumberCardRank++; 
-			}
-		}
-		return countNumberCardRank;
-	}
-	
 	public void checkIfPlayersHaveCard(){
 		for(int i = 0; i < playersInGame.size(); i++){ // if player already haven't card, we remove him from game. 
 			if(playersInGame.get(i).cardsOnHands.isEmpty()){
-				System.out.println(playersInGame.get(i).name + "just have finished game. HIP-HIP-HURAYYYYY..........");
 				playersInGame.remove(i);
 				currentPlayer--;
 			}
@@ -334,17 +124,9 @@ public class Table{
 	public boolean checkIfItIsTheLastPlayer(){
 		boolean ifItIsTheLastPlayer = false;
 		if(playersInGame.size() == 1){ // when we have only one player with card, game just have finished, p.get(0) lost(defeated). 
-			System.out.println("Player " + playersInGame.get(0).name + " lost!!!");
 			ifItIsTheLastPlayer = true;
 		}
 		return ifItIsTheLastPlayer;
-	}
-
-	public int getPlayerChoose() throws IOException{
-		BufferedReader readerNumber = new BufferedReader(new InputStreamReader (System.in)); 
-		String s1 = readerNumber.readLine();
-		Integer i = Integer.valueOf(s1);
-		return i;
 	}
 
 	public LinkedList<Card> getCardsOnTable() {
@@ -354,7 +136,6 @@ public class Table{
 	public LinkedList<Player> getPlayerInGame() {
 		return playersInGame;
 	}
-
 
 }
 
